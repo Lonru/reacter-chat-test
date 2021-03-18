@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React 채팅</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <style>
+      .container {
+        width: 80%;
+        margin: 0 auto;
+        border: 1px black solid;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div>
+      <textarea id="chatList" style="width: 600px; height: 200px" readonly="true">
+채팅에 입장하신것을 환영합니다.</textarea
+      >
+    </div>
+
+    <div style="width: 600px">
+      <input id="username" placeholder="닉네임" style="width: 15%" value="" />
+      <input onkeyup="enterkey();" id="msg" placeholder="메시지를 입력하세요" style="width: 70%" />
+      <button id="btn-send">전송</button>
+    </div>
+
+    <script>
+      function enterkey() {
+        if (window.event.keyCode == 13) {
+          $("#btn-send").click();
+        }
+      }
+
+      const eventSource = new EventSource("http://localhost:8080/sse");
+      eventSource.onmessage = (event) => {
+        console.log(event.data);
+
+        let chatList = document.getElementById(`chatList`);
+        chatList.value += "\n" + event.data;
+        const $messageTextBox = $("#chatList");
+        $messageTextBox.scrollTop($messageTextBox[0].scrollHeight);
+      };
+      eventSource.onerror = (error) => {
+        eventSource.close();
+      };
+      $("#btn-send").on("click", (e) => {
+        let username = document.getElementById(`username`).value;
+        let msg = document.getElementById(`msg`).value;
+        let data = {
+          username: username,
+          msg: msg,
+        };
+
+        $.ajax({
+          type: "POST",
+          url: "http://localhost:8080/send",
+          data: JSON.stringify(data),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+        }).done((res) => {});
+        $("#msg").val("");
+      });
+    </script>
+  </body>
+</html>
